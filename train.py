@@ -58,3 +58,5 @@ if __name__ == "__main__":
         eval_loss = evaluate_model(model, test_dataloader, criterion, device)
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Eval Loss: {eval_loss:.4f}')
         print()
+        # Save the model checkpoint
+        torch.save(model.state_dict(), 'yolov2_model.pth')
