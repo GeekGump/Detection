@@ -68,9 +68,10 @@ class DetectionDataset:
                         x, y, w, h = map(float, parts[1:5])
                     except ValueError:
                         continue
-                    boxes.append([cls, x, y, w, h])
+                    boxes.append([x, y, w, h,cls])
             if boxes:
                 lbl = torch.tensor(boxes, dtype=torch.float32)
+                # lbl = torch.as_tensor(boxes, dtype=torch.float32)
             else:
                 lbl = torch.empty((0, 5), dtype=torch.float32)
 
@@ -78,7 +79,7 @@ class DetectionDataset:
             # if transform:
             #     img = transform(img)
             self.images.append(img)
-            self.labels.append(lbl)
+            self.labels.append(boxes)
 
     def __len__(self):
         return len(self.images)
@@ -91,7 +92,6 @@ class DetectionDataset:
         # Use a copy to avoid accidental in-place modifications of the cached image
         if self.transform:
             image = self.transform(image.copy())
-
         return image, label
     
 

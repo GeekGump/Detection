@@ -1,4 +1,5 @@
-from models.YOLOV2 import YOLOV2,YOLOV2LOSS
+from models.YOLOV2 import YOLOV2
+from models.YoloLoss import YOLOLoss
 import torch
 import numpy as np
 import torch
@@ -9,12 +10,11 @@ def train_model(model, dataloader, criterion, optimizer, device):
     total_loss = 0.0
     for images, targets in dataloader:
         images = images.to(device)
-        # Assuming targets is a list of tensors
-        targets = [t.to(device) for t in targets]
+        # targets = [t.to(device) for t in targets]
 
         optimizer.zero_grad()
         outputs = model(images)
-        loss = criterion(outputs, targets)
+        loss, coord_loss, conf_loss, cls_loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
 
@@ -28,11 +28,10 @@ def evaluate_model(model, dataloader, criterion, device):
     with torch.no_grad():
         for images, targets in dataloader:
             images = images.to(device)
-            targets = [t.to(device) for t in targets]
 
             outputs = model(images)
-            loss = criterion(outputs, targets)
-
+            loss, coord_loss, conf_loss, cls_loss = criterion(outputs, targets)
+            print(f'Eval Loss: {loss.item():.4f} (Coord: {coord_loss.item():.4f}, Conf: {conf_loss.item():.4f}, Class: {cls_loss.item():.4f})')
             total_loss += loss.item()
     return total_loss / len(dataloader)
 
@@ -46,8 +45,8 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Model, Loss, Optimizer
-    model = YOLOV2(num_classes=20).to(device)
-    criterion = YOLOV2LOSS()
+    model = YOLOV2(num_classes=36).to(device)
+    criterion = YOLOLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # DataLoader
@@ -58,3 +57,4 @@ if __name__ == "__main__":
         avg_loss = train_model(model, train_dataloader, criterion, optimizer, device)
         eval_loss = evaluate_model(model, test_dataloader, criterion, device)
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}, Eval Loss: {eval_loss:.4f}')
+        print()
